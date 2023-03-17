@@ -6,6 +6,7 @@ import com.hilltop.user.domain.request.UserRequestDto;
 import com.hilltop.user.enumeration.UserType;
 import com.hilltop.user.exception.HillTopUserApplicationException;
 import com.hilltop.user.exception.InvalidLoginException;
+import com.hilltop.user.exception.UserExistException;
 import com.hilltop.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,9 @@ import static org.mockito.MockitoAnnotations.openMocks;
  */
 class UserServiceTest {
 
+    private static final String MOBILE_NO = "0779090909";
+    private static final String PASSWORD = "password";
+    private static final String FAILED = "Failed.";
     private final UserRequestDto userRequestDto = getUserRequestDto();
     private final LoginRequestDto loginRequestDto = getLoginRequestDto();
     private final User user = getUser();
@@ -52,12 +56,31 @@ class UserServiceTest {
 
     @Test
     void Should_ThrowHillTopUserApplicationException_When_FailedToAddUserData() {
-        when(userRepository.save(any())).thenThrow(new DataAccessException("Failed") {
+        when(userRepository.save(any())).thenThrow(new DataAccessException(FAILED) {
         });
-        HillTopUserApplicationException exception = assertThrows(HillTopUserApplicationException.class, () -> {
-            userService.addUser(userRequestDto);
-        });
+        HillTopUserApplicationException exception = assertThrows(HillTopUserApplicationException.class,
+                () -> userService.addUser(userRequestDto));
         assertEquals("Failed to save user info in database.", exception.getMessage());
+    }
+
+    /**
+     * unit tests for checkMobileNoExist() method.
+     */
+    @Test
+    void Should_ThrowUserExistException_When_FailedToAccessUserData() {
+        when(userRepository.findByMobileNo(any())).thenReturn(Optional.of(user));
+        UserExistException exception = assertThrows(UserExistException.class,
+                () -> userService.checkMobileNoExist(MOBILE_NO));
+        assertEquals("Mobile number already registered.", exception.getMessage());
+    }
+
+    @Test
+    void Should_ThrowHillTopUserApplicationException_When_FailedToGetUserByMobileNo() {
+        when(userRepository.findByMobileNo(any())).thenThrow(new DataAccessException(FAILED) {
+        });
+        HillTopUserApplicationException exception = assertThrows(HillTopUserApplicationException.class,
+                () -> userService.checkMobileNoExist(MOBILE_NO));
+        assertEquals("Failed to get user by mobileNo from database.", exception.getMessage());
     }
 
     /**
@@ -73,11 +96,10 @@ class UserServiceTest {
 
     @Test
     void Should_ThrowHillTopUserApplicationException_When_FailedToAccessUserData() {
-        when(userRepository.findByMobileNo(any())).thenThrow(new DataAccessException("Failed") {
+        when(userRepository.findByMobileNo(any())).thenThrow(new DataAccessException(FAILED) {
         });
-        HillTopUserApplicationException exception = assertThrows(HillTopUserApplicationException.class, () -> {
-            userService.loginUser(loginRequestDto);
-        });
+        HillTopUserApplicationException exception = assertThrows(HillTopUserApplicationException.class,
+                () -> userService.loginUser(loginRequestDto));
         assertEquals("Failed to get user from database.", exception.getMessage());
     }
 
@@ -85,9 +107,8 @@ class UserServiceTest {
     void Should_ThrowInvalidLoginExceptionException_When_PasswordDoesntMatch() {
         when(userRepository.findByMobileNo(any())).thenReturn(Optional.of(user));
         when((passwordEncoder.matches(any(), any()))).thenReturn(false);
-        InvalidLoginException exception = assertThrows(InvalidLoginException.class, () -> {
-            userService.loginUser(loginRequestDto);
-        });
+        InvalidLoginException exception = assertThrows(InvalidLoginException.class,
+                () -> userService.loginUser(loginRequestDto));
         assertEquals("Invalid credentials.", exception.getMessage());
     }
 
@@ -99,8 +120,8 @@ class UserServiceTest {
     private UserRequestDto getUserRequestDto() {
         UserRequestDto userRequestDto = new UserRequestDto();
         userRequestDto.setName("User");
-        userRequestDto.setMobileNo("779090909");
-        userRequestDto.setPassword("password");
+        userRequestDto.setMobileNo(MOBILE_NO);
+        userRequestDto.setPassword(PASSWORD);
         userRequestDto.setUserType(UserType.USER);
         return userRequestDto;
     }
@@ -112,8 +133,8 @@ class UserServiceTest {
      */
     private LoginRequestDto getLoginRequestDto() {
         LoginRequestDto loginRequestDto = new LoginRequestDto();
-        loginRequestDto.setMobileNo("779090909");
-        loginRequestDto.setPassword("password");
+        loginRequestDto.setMobileNo(MOBILE_NO);
+        loginRequestDto.setPassword(PASSWORD);
         loginRequestDto.setUserType(UserType.USER);
         return loginRequestDto;
     }
@@ -125,8 +146,8 @@ class UserServiceTest {
      */
     private User getUser() {
         User user = new User();
-        user.setMobileNo("779090909");
-        user.setPassword("password");
+        user.setMobileNo(MOBILE_NO);
+        user.setPassword(PASSWORD);
         user.setUserType(UserType.USER);
         return user;
     }

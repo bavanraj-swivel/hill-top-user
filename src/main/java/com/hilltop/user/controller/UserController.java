@@ -9,6 +9,7 @@ import com.hilltop.user.enumeration.ErrorMessage;
 import com.hilltop.user.enumeration.SuccessMessage;
 import com.hilltop.user.exception.HillTopUserApplicationException;
 import com.hilltop.user.exception.InvalidLoginException;
+import com.hilltop.user.exception.UserExistException;
 import com.hilltop.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -44,8 +45,13 @@ public class UserController extends BaseController {
                 log.debug("Required fields missing. data: {}", userRequestDto.toLogJson());
                 return getBadRequestErrorResponse(ErrorMessage.MISSING_REQUIRED_FIELDS);
             }
+            if (!userRequestDto.isValidMobileNo())
+                return getBadRequestErrorResponse(ErrorMessage.INVALID_MOBILE_NO);
             userService.addUser(userRequestDto);
             return getSuccessResponse(SuccessMessage.SUCCESSFULLY_ADDED, null);
+        } catch (UserExistException e) {
+            log.debug("User already exist for mobileNo: {}.", userRequestDto.getMobileNo(), e);
+            return getBadRequestErrorResponse(ErrorMessage.MOBILE_NO_EXIST);
         } catch (HillTopUserApplicationException e) {
             log.error("Failed to add user. ", e);
             return getInternalServerError();

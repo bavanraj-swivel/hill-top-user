@@ -1,6 +1,5 @@
 package com.hilltop.user.domain.request;
 
-import com.hilltop.user.enumeration.UserType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,12 +8,9 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class UserRequestDto implements RequestDto {
+public class UserRequestDto extends LoginRequestDto {
 
     private String name;
-    private String mobileNo;
-    private String password;
-    private UserType userType;
 
     /**
      * Used to validate required fields.
@@ -23,6 +19,6 @@ public class UserRequestDto implements RequestDto {
      */
     @Override
     public boolean isRequiredFieldsAvailable() {
-        return isNonEmpty(name) && isNonEmpty(mobileNo) && isNonEmpty(password) && userType != null;
+        return isNonEmpty(name) && super.isRequiredFieldsAvailable();
     }
 }

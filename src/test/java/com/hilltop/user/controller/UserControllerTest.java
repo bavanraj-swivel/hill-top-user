@@ -8,6 +8,7 @@ import com.hilltop.user.enumeration.SuccessMessage;
 import com.hilltop.user.enumeration.UserType;
 import com.hilltop.user.exception.HillTopUserApplicationException;
 import com.hilltop.user.exception.InvalidLoginException;
+import com.hilltop.user.exception.UserExistException;
 import com.hilltop.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 class UserControllerTest {
 
+    private static final String MOBILE_NO = "0779090909";
+    private static final String PASSWORD = "password";
+    private static final String FAILED = "Failed.";
     private final String REGISTER_URI = "/api/user";
     private final String LOGIN_URI = "/api/user/login";
     private final UserRequestDto userRequestDto = getUserRequestDto();
@@ -38,11 +42,12 @@ class UserControllerTest {
     @Mock
     private UserService userService;
     private MockMvc mockMvc;
+    UserController userController;
 
     @BeforeEach
     void setUp() {
         openMocks(this);
-        UserController userController = new UserController(userService);
+        userController = new UserController(userService);
         mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
     }
 
@@ -71,9 +76,31 @@ class UserControllerTest {
     }
 
     @Test
+    void Should_ReturnBadRequest_When_MobileNoDoesntMatchThePattern() throws Exception {
+        UserRequestDto requestDto = userRequestDto;
+        requestDto.setMobileNo("077123*");
+        mockMvc.perform(MockMvcRequestBuilders.post(REGISTER_URI)
+                        .content(requestDto.toLogJson())
+                        .contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(ErrorMessage.INVALID_MOBILE_NO.getMessage()))
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    void Should_ReturnUserExistError_When_UserTryToRegisterWithExistingNo() throws Exception {
+        doThrow(new UserExistException(FAILED)).when(userService).addUser(any());
+        mockMvc.perform(MockMvcRequestBuilders.post(REGISTER_URI)
+                        .content(userRequestDto.toLogJson())
+                        .contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(ErrorMessage.MOBILE_NO_EXIST.getMessage()))
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
     void Should_ReturnInternalServerError_When_RegisterUserIsFailedDueToInternalErrors() throws Exception {
-        doThrow(new HillTopUserApplicationException("Failed to add user."))
-                .when(userService).addUser(any());
+        doThrow(new HillTopUserApplicationException(FAILED)).when(userService).addUser(any());
         mockMvc.perform(MockMvcRequestBuilders.post(REGISTER_URI)
                         .content(userRequestDto.toLogJson())
                         .contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
@@ -110,8 +137,7 @@ class UserControllerTest {
 
     @Test
     void Should_ReturnInternalServerError_When_LoginIsFailedDueToInternalErrors() throws Exception {
-        doThrow(new HillTopUserApplicationException("Failed to login user."))
-                .when(userService).loginUser(any());
+        doThrow(new HillTopUserApplicationException(FAILED)).when(userService).loginUser(any());
         mockMvc.perform(MockMvcRequestBuilders.post(LOGIN_URI)
                         .content(userRequestDto.toLogJson())
                         .contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
@@ -122,8 +148,7 @@ class UserControllerTest {
 
     @Test
     void Should_ReturnInvalidLoginResponse_When_LoginIsFailedDueToInvalidLoginException() throws Exception {
-        doThrow(new InvalidLoginException("Invalid login."))
-                .when(userService).loginUser(any());
+        doThrow(new InvalidLoginException(FAILED)).when(userService).loginUser(any());
         mockMvc.perform(MockMvcRequestBuilders.post(LOGIN_URI)
                         .content(userRequestDto.toLogJson())
                         .contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
@@ -140,8 +165,8 @@ class UserControllerTest {
     private UserRequestDto getUserRequestDto() {
         UserRequestDto userRequestDto = new UserRequestDto();
         userRequestDto.setName("User");
-        userRequestDto.setMobileNo("779090909");
-        userRequestDto.setPassword("password");
+        userRequestDto.setMobileNo(MOBILE_NO);
+        userRequestDto.setPassword(PASSWORD);
         userRequestDto.setUserType(UserType.USER);
         return userRequestDto;
     }
@@ -153,8 +178,8 @@ class UserControllerTest {
      */
     private LoginRequestDto getLoginRequestDto() {
         LoginRequestDto loginRequestDto = new LoginRequestDto();
-        loginRequestDto.setMobileNo("779090909");
-        loginRequestDto.setPassword("password");
+        loginRequestDto.setMobileNo(MOBILE_NO);
+        loginRequestDto.setPassword(PASSWORD);
         loginRequestDto.setUserType(UserType.USER);
         return loginRequestDto;
     }
@@ -167,8 +192,8 @@ class UserControllerTest {
     private User getUser() {
         User user = new User();
         user.setId("uid-123");
-        user.setMobileNo("779090909");
-        user.setPassword("password");
+        user.setMobileNo(MOBILE_NO);
+        user.setPassword(PASSWORD);
         user.setUserType(UserType.USER);
         return user;
     }

@@ -10,7 +10,9 @@ public enum ErrorMessage {
 
     INTERNAL_SERVER_ERROR("Something went wrong."),
     MISSING_REQUIRED_FIELDS("Required fields are missing."),
-    INVALID_LOGIN("Invalid login.");
+    INVALID_LOGIN("Invalid login."),
+    INVALID_MOBILE_NO("Invalid mobile number"),
+    MOBILE_NO_EXIST("Mobile number already exist.");
 
     private final String message;
 
