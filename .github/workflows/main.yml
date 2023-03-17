@@ -9,7 +9,40 @@ on:
     types: [ opened, synchronize, reopened ]
 jobs:
   build:
-    name: Build and analyze
+    name: Build Archive
+    #Will run steps on latest version of ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      #Check-out your repository under $GITHUB_WORKSPACE, so your workflow can access it
+      - uses: actions/checkout@v1
+      #Set up JDK 8
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+      #Set up Maven cache
+      - name: Cache Maven packages
+        #This action allows caching dependencies and build outputs to improve workflow execution time.
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      #Build the application using Maven
+      - name: Build with Maven
+        run: mvn -B package -DskipTests --file pom.xml
+      - name: Upload JAR
+        # We upload so we can re-use same jar in next job.
+        uses: actions/upload-artifact@v2
+        with:
+          #Name of artifact can be anything
+          name: artifact
+          #Relative path to jar file
+          path: target/user-0.0.1-SNAPSHOT.jar
+  scan:
+    needs: build
+    name: Sonar Analysis
+    #Will run steps on latest version of ubuntu
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -40,7 +73,7 @@ jobs:
   #Deploy's job
   deploy:
     #Depends on build's job
-#    needs: scan
+    needs: scan
     name: Deploy to Elastic Beanstalk
     #Will run steps on latest version of ubuntu
     runs-on: ubuntu-latest
