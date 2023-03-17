@@ -29,32 +29,9 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
       - name: Run Tests
         run: mvn -B test
-  #Build workflow
-  build:
-    name: Build Archive
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Set up JDK
-        uses: actions/setup-java@v1
-        with:
-          java-version: "11"
-      - name: Cache Maven packages
-        uses: actions/cache@v1
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-      - name: Build with Maven
-        run: mvn -B package -DskipTests --file pom.xml
-      - name: Upload JAR
-        uses: actions/upload-artifact@v2
-        with:
-          name: artifact
-          path: target/hill-top-user-0.0.1-SNAPSHOT.jar
   #Sonar scan workflow
   scan:
-    needs: build
+    needs: tests
     name: Sonar Analysis
     runs-on: ubuntu-latest
     steps:
@@ -84,9 +61,33 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
           -Dsonar.projectKey=bavanraj-swivel_hill-top-user
+  #Build workflow
+  build:
+    needs: scan
+    name: Build Archive
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: "11"
+      - name: Cache Maven packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Build with Maven
+        run: mvn -B package -DskipTests --file pom.xml
+      - name: Upload JAR
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifact
+          path: target/hill-top-user-0.0.1-SNAPSHOT.jar
   #Deployment workflow
   deploy:
-    needs: scan
+    needs: build
     name: Deploy to Elastic Beanstalk
     runs-on: ubuntu-latest
     steps:
