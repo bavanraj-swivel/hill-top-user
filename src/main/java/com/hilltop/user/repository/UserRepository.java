@@ -10,5 +10,11 @@ import java.util.Optional;
  */
 public interface UserRepository extends JpaRepository<User, String> {
 
+    /**
+     * Used to find user by mobile number.
+     *
+     * @param mobileNo mobileNo
+     * @return user.
+     */
     Optional<User> findByMobileNo(String mobileNo);
 }
