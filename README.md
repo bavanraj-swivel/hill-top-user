@@ -8,7 +8,7 @@
 
 * Url: https://sonarcloud.io/project/overview?id=bavanraj-swivel_hill-top-user
 
-![image](https://user-images.githubusercontent.com/88472140/226264744-8fe4298a-6d5c-4c88-bfcd-f378d35c8118.png)
+![image](https://user-images.githubusercontent.com/88472140/226271981-b79de4ab-d135-471f-8299-d8075efef7f9.png)
 
 ## Postman collection
 
