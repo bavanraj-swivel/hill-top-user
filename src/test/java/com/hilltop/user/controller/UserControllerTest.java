@@ -34,8 +34,8 @@ class UserControllerTest {
     private static final String MOBILE_NO = "0779090909";
     private static final String PASSWORD = "password";
     private static final String FAILED = "Failed.";
-    private final String REGISTER_URI = "/api/user";
-    private final String LOGIN_URI = "/api/user/login";
+    private final String REGISTER_URI = "/api/v1/user";
+    private final String LOGIN_URI = "/api/v1/user/login";
     private final UserRequestDto userRequestDto = getUserRequestDto();
     private final LoginRequestDto loginRequestDto = getLoginRequestDto();
     private final User user = getUser();
@@ -59,7 +59,7 @@ class UserControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post(REGISTER_URI)
                         .content(userRequestDto.toLogJson())
                         .contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value(SuccessMessage.SUCCESSFULLY_ADDED.getMessage()));
     }
 

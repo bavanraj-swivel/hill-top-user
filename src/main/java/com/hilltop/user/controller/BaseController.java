@@ -19,12 +19,13 @@ public class BaseController {
      *
      * @param successMessage success message
      * @param responseDto    response data
+     * @param httpStatus     http status
      * @return success response.
      */
     protected ResponseEntity<ResponseWrapper> getSuccessResponse(SuccessMessage successMessage,
-                                                                 ResponseDto responseDto) {
+                                                                 ResponseDto responseDto, HttpStatus httpStatus) {
         ResponseWrapper responseWrapper = new ResponseWrapper(successMessage.getMessage(), responseDto);
-        return new ResponseEntity<>(responseWrapper, HttpStatus.OK);
+        return new ResponseEntity<>(responseWrapper, httpStatus);
     }
 
     /**

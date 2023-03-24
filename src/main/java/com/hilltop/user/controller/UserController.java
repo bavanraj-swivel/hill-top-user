@@ -12,6 +12,7 @@ import com.hilltop.user.exception.InvalidLoginException;
 import com.hilltop.user.exception.UserExistException;
 import com.hilltop.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @Slf4j
-@RequestMapping("/api/user")
+@RequestMapping("/api/v1/user")
 public class UserController extends BaseController {
 
     private final UserService userService;
@@ -48,7 +49,7 @@ public class UserController extends BaseController {
             if (!userRequestDto.isValidMobileNo())
                 return getBadRequestErrorResponse(ErrorMessage.INVALID_MOBILE_NO);
             userService.addUser(userRequestDto);
-            return getSuccessResponse(SuccessMessage.SUCCESSFULLY_ADDED, null);
+            return getSuccessResponse(SuccessMessage.SUCCESSFULLY_ADDED, null, HttpStatus.CREATED);
         } catch (UserExistException e) {
             log.debug("User already exist for mobileNo: {}.", userRequestDto.getMobileNo(), e);
             return getBadRequestErrorResponse(ErrorMessage.MOBILE_NO_EXIST);
@@ -72,7 +73,7 @@ public class UserController extends BaseController {
                 return getBadRequestErrorResponse(ErrorMessage.MISSING_REQUIRED_FIELDS);
             }
             User user = userService.loginUser(loginRequestDto);
-            return getSuccessResponse(SuccessMessage.SUCCESSFULLY_LOGGED_IN, new LoginResponseDto(user));
+            return getSuccessResponse(SuccessMessage.SUCCESSFULLY_LOGGED_IN, new LoginResponseDto(user), HttpStatus.OK);
         } catch (InvalidLoginException e) {
             log.error("User credentials didn't match.", e);
             return getBadRequestErrorResponse(ErrorMessage.INVALID_LOGIN);
