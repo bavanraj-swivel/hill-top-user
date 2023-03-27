@@ -1,18 +1,15 @@
 package com.hilltop.user.service;
 
 import com.hilltop.user.domain.entity.User;
-import com.hilltop.user.domain.request.LoginRequestDto;
 import com.hilltop.user.domain.request.UserRequestDto;
 import com.hilltop.user.enumeration.UserType;
 import com.hilltop.user.exception.HillTopUserApplicationException;
-import com.hilltop.user.exception.InvalidLoginException;
 import com.hilltop.user.exception.UserExistException;
 import com.hilltop.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.dao.DataAccessException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -31,18 +28,17 @@ class UserServiceTest {
     private static final String PASSWORD = "password";
     private static final String FAILED = "Failed.";
     private final UserRequestDto userRequestDto = getUserRequestDto();
-    private final LoginRequestDto loginRequestDto = getLoginRequestDto();
     private final User user = getUser();
     @Mock
     private UserRepository userRepository;
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private JwtTokenService jwtTokenService;
     private UserService userService;
 
     @BeforeEach
     void setUp() {
         openMocks(this);
-        userService = new UserService(userRepository, passwordEncoder, jwtService);
+        userService = new UserService(userRepository, jwtTokenService);
     }
 
     /**
@@ -84,32 +80,22 @@ class UserServiceTest {
     }
 
     /**
-     * unit tests for loginUser() method.
+     * unit tests for generateToken() method.
      */
     @Test
-    void Should_ReturnUser_When_ValidDataIsGiven() {
-        when(userRepository.findByMobileNo(any())).thenReturn(Optional.of(user));
-        when((passwordEncoder.matches(any(), any()))).thenReturn(true);
-        User userFromDb = userService.loginUser(loginRequestDto);
-        assertEquals(loginRequestDto.getMobileNo(), userFromDb.getMobileNo());
+    void Should_CallJwtTokenServiceGenerateTokenMethod_When_GenerateTokenIsCalled() {
+        userService.generateToken("0779777782");
+        verify(jwtTokenService, times(1)).generateToken(anyString());
     }
 
+    /**
+     * unit tests for generateToken() method.
+     */
     @Test
-    void Should_ThrowHillTopUserApplicationException_When_FailedToAccessUserData() {
-        when(userRepository.findByMobileNo(any())).thenThrow(new DataAccessException(FAILED) {
-        });
-        HillTopUserApplicationException exception = assertThrows(HillTopUserApplicationException.class,
-                () -> userService.loginUser(loginRequestDto));
-        assertEquals("Failed to get user from database.", exception.getMessage());
-    }
-
-    @Test
-    void Should_ThrowInvalidLoginExceptionException_When_PasswordDoesntMatch() {
-        when(userRepository.findByMobileNo(any())).thenReturn(Optional.of(user));
-        when((passwordEncoder.matches(any(), any()))).thenReturn(false);
-        InvalidLoginException exception = assertThrows(InvalidLoginException.class,
-                () -> userService.loginUser(loginRequestDto));
-        assertEquals("Invalid credentials.", exception.getMessage());
+    void Should_CallJwtTokenServiceValidateTokenMethod_When_ValidateTokenIsCalled() {
+        String token = userService.generateToken("0779777782");
+        userService.validateToken(token);
+        verify(jwtTokenService, times(1)).validateToken(token);
     }
 
     /**
@@ -124,19 +110,6 @@ class UserServiceTest {
         userRequestDto.setPassword(PASSWORD);
         userRequestDto.setUserType(UserType.USER);
         return userRequestDto;
-    }
-
-    /**
-     * This method is used to mock loginRequestDto.
-     *
-     * @return loginRequestDto
-     */
-    private LoginRequestDto getLoginRequestDto() {
-        LoginRequestDto loginRequestDto = new LoginRequestDto();
-        loginRequestDto.setMobileNo(MOBILE_NO);
-        loginRequestDto.setPassword(PASSWORD);
-        loginRequestDto.setUserType(UserType.USER);
-        return loginRequestDto;
     }
 
     /**

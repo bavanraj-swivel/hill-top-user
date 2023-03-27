@@ -1,6 +1,5 @@
 package com.hilltop.user.domain.request;
 
-import com.hilltop.user.enumeration.UserType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -20,7 +19,6 @@ class LoginRequestDtoTest {
         loginRequestDto = new LoginRequestDto();
         loginRequestDto.setMobileNo("779090909");
         loginRequestDto.setPassword("password");
-        loginRequestDto.setUserType(UserType.USER);
     }
 
     /**
