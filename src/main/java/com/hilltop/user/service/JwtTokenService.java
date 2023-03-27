@@ -19,8 +19,7 @@ import java.util.Map;
 @Service
 public class JwtTokenService {
 
-    //Secret used to encrypt & decrypt token
-    public static final String SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
+    public static final String KEY = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
 
     /**
      * This method is used to validate jwt token.
@@ -57,7 +56,7 @@ public class JwtTokenService {
      * @return key
      */
     private Key getSignKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET);
+        byte[] keyBytes = Decoders.BASE64.decode(KEY);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
