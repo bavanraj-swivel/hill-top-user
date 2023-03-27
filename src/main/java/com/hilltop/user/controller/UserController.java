@@ -1,6 +1,5 @@
 package com.hilltop.user.controller;
 
-import com.hilltop.user.domain.entity.User;
 import com.hilltop.user.domain.request.LoginRequestDto;
 import com.hilltop.user.domain.request.UserRequestDto;
 import com.hilltop.user.domain.response.LoginResponseDto;
@@ -8,16 +7,15 @@ import com.hilltop.user.domain.response.ResponseWrapper;
 import com.hilltop.user.enumeration.ErrorMessage;
 import com.hilltop.user.enumeration.SuccessMessage;
 import com.hilltop.user.exception.HillTopUserApplicationException;
-import com.hilltop.user.exception.InvalidLoginException;
+import com.hilltop.user.exception.TokenException;
 import com.hilltop.user.exception.UserExistException;
 import com.hilltop.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * User controller
@@ -28,9 +26,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController extends BaseController {
 
     private final UserService userService;
+    private final AuthenticationManager authenticationManager;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, AuthenticationManager authenticationManager) {
         this.userService = userService;
+        this.authenticationManager = authenticationManager;
     }
 
     /**
@@ -44,15 +44,15 @@ public class UserController extends BaseController {
         try {
             if (!userRequestDto.isRequiredFieldsAvailable()) {
                 log.debug("Required fields missing. data: {}", userRequestDto.toLogJson());
-                return getBadRequestErrorResponse(ErrorMessage.MISSING_REQUIRED_FIELDS);
+                return getBadRequestErrorResponse(ErrorMessage.MISSING_REQUIRED_FIELDS, HttpStatus.BAD_REQUEST);
             }
             if (!userRequestDto.isValidMobileNo())
-                return getBadRequestErrorResponse(ErrorMessage.INVALID_MOBILE_NO);
+                return getBadRequestErrorResponse(ErrorMessage.INVALID_MOBILE_NO, HttpStatus.BAD_REQUEST);
             userService.addUser(userRequestDto);
             return getSuccessResponse(SuccessMessage.SUCCESSFULLY_ADDED, null, HttpStatus.CREATED);
         } catch (UserExistException e) {
             log.debug("User already exist for mobileNo: {}.", userRequestDto.getMobileNo(), e);
-            return getBadRequestErrorResponse(ErrorMessage.MOBILE_NO_EXIST);
+            return getBadRequestErrorResponse(ErrorMessage.MOBILE_NO_EXIST, HttpStatus.BAD_REQUEST);
         } catch (HillTopUserApplicationException e) {
             log.error("Failed to add user. ", e);
             return getInternalServerError();
@@ -70,15 +70,34 @@ public class UserController extends BaseController {
         try {
             if (!loginRequestDto.isRequiredFieldsAvailable()) {
                 log.debug("Required fields missing. data: {}", loginRequestDto.toLogJson());
-                return getBadRequestErrorResponse(ErrorMessage.MISSING_REQUIRED_FIELDS);
+                return getBadRequestErrorResponse(ErrorMessage.MISSING_REQUIRED_FIELDS, HttpStatus.BAD_REQUEST);
             }
-            User user = userService.loginUser(loginRequestDto);
-            return getSuccessResponse(SuccessMessage.SUCCESSFULLY_LOGGED_IN, new LoginResponseDto(user), HttpStatus.OK);
-        } catch (InvalidLoginException e) {
-            log.error("User credentials didn't match.", e);
-            return getBadRequestErrorResponse(ErrorMessage.INVALID_LOGIN);
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                    loginRequestDto.getMobileNo(), loginRequestDto.getPassword()));
+            String token = userService.generateToken(loginRequestDto.getMobileNo());
+            return getSuccessResponse(SuccessMessage.SUCCESSFULLY_LOGGED_IN, new LoginResponseDto(token), HttpStatus.OK);
         } catch (HillTopUserApplicationException e) {
             log.error("Failed to log in.", e);
+            return getInternalServerError();
+        }
+    }
+
+    /**
+     * This method is used to validate token.
+     *
+     * @param token token
+     * @return success/ error response.
+     */
+    @GetMapping("/validate-token")
+    public ResponseEntity<ResponseWrapper> validateToken(@RequestParam String token) {
+        try {
+            userService.validateToken(token);
+            return getSuccessResponse(SuccessMessage.VALID_TOKEN, null, HttpStatus.OK);
+        } catch (TokenException e) {
+            log.error("Invalid token: {}", token);
+            return getBadRequestErrorResponse(ErrorMessage.INVALID_TOKEN, HttpStatus.UNAUTHORIZED);
+        } catch (HillTopUserApplicationException e) {
+            log.error("Failed to validate token.", e);
             return getInternalServerError();
         }
     }

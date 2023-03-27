@@ -47,7 +47,7 @@ class UserControllerTest {
     @BeforeEach
     void setUp() {
         openMocks(this);
-        userController = new UserController(userService);
+        userController = new UserController(userService, authenticationManager);
         mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
     }
 

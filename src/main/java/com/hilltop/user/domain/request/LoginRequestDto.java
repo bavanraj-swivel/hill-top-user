@@ -1,6 +1,5 @@
 package com.hilltop.user.domain.request;
 
-import com.hilltop.user.enumeration.UserType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,7 +13,6 @@ public class LoginRequestDto implements RequestDto {
     private static final String MOBILE_NO_PATTERN = "^\\d{10}$";
     private String mobileNo;
     private String password;
-    private UserType userType;
 
     /**
      * Used to validate required fields.
@@ -23,7 +21,7 @@ public class LoginRequestDto implements RequestDto {
      */
     @Override
     public boolean isRequiredFieldsAvailable() {
-        return isNonEmpty(mobileNo) && isNonEmpty(password) && userType != null;
+        return isNonEmpty(mobileNo) && isNonEmpty(password);
     }
 
     /**

@@ -42,7 +42,7 @@ class UserServiceTest {
     @BeforeEach
     void setUp() {
         openMocks(this);
-        userService = new UserService(userRepository, passwordEncoder);
+        userService = new UserService(userRepository, passwordEncoder, jwtService);
     }
 
     /**

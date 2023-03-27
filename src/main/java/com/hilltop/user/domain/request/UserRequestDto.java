@@ -1,5 +1,6 @@
 package com.hilltop.user.domain.request;
 
+import com.hilltop.user.enumeration.UserType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +12,7 @@ import lombok.Setter;
 public class UserRequestDto extends LoginRequestDto {
 
     private String name;
+    private UserType userType;
 
     /**
      * Used to validate required fields.

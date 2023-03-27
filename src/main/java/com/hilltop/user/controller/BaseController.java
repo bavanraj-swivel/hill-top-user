@@ -32,11 +32,13 @@ public class BaseController {
      * This method is used to send bad request error response.
      *
      * @param errorMessage error message
+     * @param httpStatus   http status
      * @return bad request error response.
      */
-    protected ResponseEntity<ResponseWrapper> getBadRequestErrorResponse(ErrorMessage errorMessage) {
+    protected ResponseEntity<ResponseWrapper> getBadRequestErrorResponse(ErrorMessage errorMessage,
+                                                                         HttpStatus httpStatus) {
         ResponseWrapper responseWrapper = new ResponseWrapper(errorMessage.getMessage());
-        return new ResponseEntity<>(responseWrapper, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(responseWrapper, httpStatus);
     }
 
     /**
