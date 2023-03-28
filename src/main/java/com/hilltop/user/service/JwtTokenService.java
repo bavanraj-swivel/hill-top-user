@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -19,7 +20,8 @@ import java.util.Map;
 @Service
 public class JwtTokenService {
 
-    public static final String KEY = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
+    @Value("${token.key}")
+    public String tokenKey;
 
     /**
      * This method is used to validate jwt token.
@@ -56,7 +58,7 @@ public class JwtTokenService {
      * @return key
      */
     private Key getSignKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(tokenKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
