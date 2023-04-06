@@ -31,14 +31,12 @@ class UserServiceTest {
     private final User user = getUser();
     @Mock
     private UserRepository userRepository;
-    @Mock
-    private JwtTokenService jwtTokenService;
     private UserService userService;
 
     @BeforeEach
     void setUp() {
         openMocks(this);
-        userService = new UserService(userRepository, jwtTokenService);
+        userService = new UserService(userRepository);
     }
 
     /**
@@ -77,25 +75,6 @@ class UserServiceTest {
         HillTopUserApplicationException exception = assertThrows(HillTopUserApplicationException.class,
                 () -> userService.checkMobileNoExist(MOBILE_NO));
         assertEquals("Failed to get user by mobileNo from database.", exception.getMessage());
-    }
-
-    /**
-     * unit tests for generateToken() method.
-     */
-    @Test
-    void Should_CallJwtTokenServiceGenerateTokenMethod_When_GenerateTokenIsCalled() {
-        userService.generateToken("0779777782");
-        verify(jwtTokenService, times(1)).generateToken(anyString());
-    }
-
-    /**
-     * unit tests for generateToken() method.
-     */
-    @Test
-    void Should_CallJwtTokenServiceValidateTokenMethod_When_ValidateTokenIsCalled() {
-        String token = userService.generateToken("0779777782");
-        userService.validateToken(token);
-        verify(jwtTokenService, times(1)).validateToken(token);
     }
 
     /**

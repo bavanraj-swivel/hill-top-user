@@ -19,11 +19,9 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final JwtTokenService jwtTokenService;
 
-    public UserService(UserRepository userRepository, JwtTokenService jwtTokenService) {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.jwtTokenService = jwtTokenService;
     }
 
     /**
@@ -54,24 +52,5 @@ public class UserService {
         } catch (DataAccessException e) {
             throw new HillTopUserApplicationException("Failed to get user by mobileNo from database.", e);
         }
-    }
-
-    /**
-     * This method is used to generate jwt token.
-     *
-     * @param mobileNo mobileNo
-     * @return jwt token
-     */
-    public String generateToken(String mobileNo) {
-        return jwtTokenService.generateToken(mobileNo);
-    }
-
-    /**
-     * This method is used to validate jwt token.
-     *
-     * @param token jwt token
-     */
-    public void validateToken(String token) {
-        jwtTokenService.validateToken(token);
     }
 }
